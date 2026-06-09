@@ -11,7 +11,6 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -32,9 +31,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
   return (
     <div className="site-bg" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center", padding: 32, maxWidth: 480 }}>
@@ -95,7 +91,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function LayoutWrapper() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
-  
+
   if (isAdmin) {
     return <Outlet />;
   }
@@ -120,23 +116,22 @@ function LayoutWrapper() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
 
   return (
-    <div 
-      className="site-bg" 
+    <div
+      className="site-bg"
       style={isHome ? { background: "transparent", backgroundColor: "transparent" } : undefined}
     >
-      {/* Clean component invocation passing scroll states down directly */}
       <Navbar isVisible={showNavbar} isHome={isHome} />
-      
       <Outlet />
       <Footer />
     </div>
   );
 }
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
