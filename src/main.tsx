@@ -1,22 +1,26 @@
-import { createStart, createMiddleware } from "@tanstack/react-start";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getRouter } from "./router";
+import "./styles.css";
 
-import { renderErrorPage } from "./lib/error-page";
+const queryClient = new QueryClient();
+const router = getRouter();
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
-  try {
-    return await next();
-  } catch (error) {
-    if (error != null && typeof error === "object" && "statusCode" in error) {
-      throw error;
-    }
-    console.error(error);
-    return new Response(renderErrorPage(), {
-      status: 500,
-      headers: { "content-type": "text/html; charset=utf-8" },
-    });
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
   }
-});
+}
 
-export const startInstance = createStart(() => ({
-  requestMiddleware: [errorMiddleware],
-}));
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Root element not found");
+
+createRoot(rootElement).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  </StrictMode>
+);
