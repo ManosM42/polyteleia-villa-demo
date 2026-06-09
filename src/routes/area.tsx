@@ -12,7 +12,7 @@ import image7 from "../assets/knossos.jpg";
 import image8 from "../assets/mouseio.jpeg";
 import image9 from "../assets/koules.jpeg";
 import image10 from "../assets/old-town.jpg";
-import image11 from "../assets/watercity.jpg";
+import image11 from "../assets/watercity-beach.jpg";
 import image12 from "../assets/aquarium.jpg";
 import image13 from "../assets/elia.jpg";
 
