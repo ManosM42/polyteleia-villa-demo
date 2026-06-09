@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+// Import your logo from assets
+import logoImg from "../assets/logo.jpg"; 
 
 interface NavbarProps {
   isVisible?: boolean;
@@ -34,36 +36,104 @@ export function Navbar({ isVisible = true, isHome = false }: NavbarProps) {
 
   return (
     <>
-      {/* HARD OVERRIDE: If the component is not marked visible on the home page, 
-        we return null so absolutely zero HTML elements (including buttons/switchers) 
-        render onto your screen at landing.
-      */}
       {(!isHome || isVisible) && (
         <nav 
           className="navbar"
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
+            top: "20px",            
+            left: "50%", 
             zIndex: 100,
-            // Smoothly slide in from above when it mounts into the DOM
-            animation: "navSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            borderRadius: "24px", /* More rounded for a premium look */
+            padding: "16px 40px", /* Extra horizontal breathing space inside */
+            
+            /* Tightened layout width so it looks like a centralized floating dock */
+            width: "92%",
+            maxWidth: "800px", 
+            
+            /* --- LIQUID GLASS --- */
+            background: "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%)",
+            backdropFilter: "blur(24px) saturate(160%) brightness(92%)", 
+            WebkitBackdropFilter: "blur(24px) saturate(160%) brightness(92%)",
+            
+            border: "1px solid rgba(255, 255, 255, 0.16)",
+            borderTop: "1px solid rgba(255, 255, 255, 0.3)", 
+            
+            boxShadow: "0 15px 45px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.2)",
+            animation: "navCenterSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           }}
         >
-          {/* Injecting a keyframe style block to guarantee the slide animation works */}
           <style>{`
-            @keyframes navSlideDown {
-              from { transform: translateY(-100%); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
+            @keyframes navCenterSlideDown {
+              from { transform: translate(-50%, -130%); opacity: 0; filter: blur(4px); }
+              to { transform: translate(-50%, 0); opacity: 1; filter: blur(0); }
+            }
+            
+            .navbar {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              transition: transform 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            /* --- TEXT & ELEMENT SHADOWS --- */
+            .navbar .brand-mark,
+            .navbar .nav-right,
+            .navbar .menu-trigger,
+            .navbar .LanguageSwitcher {
+              filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+              color: #ffffff !important; 
+            }
+
+            /* Compact, high-visibility menu capsule */
+            .navbar .menu-trigger {
+              background: rgba(0, 0, 0, 0.35) !important;
+              padding: 10px 20px;
+              border-radius: 12px;
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              transition: all 0.2s ease;
+              backdrop-filter: blur(8px); 
+            }
+
+            .navbar .menu-trigger:hover {
+              background: rgba(255, 255, 255, 0.2) !important;
+              border-color: rgba(255, 255, 255, 0.4);
+              box-shadow: 0 0 14px rgba(197, 168, 128, 0.3);
+            }
+
+            /* --- LARGER LOGO DESIGN --- */
+            .nav-logo-img {
+              height: 75px; /* Significantly larger layout height on Mobile */
+              width: auto;
+              object-fit: contain;
+              display: block;
+              filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+              transition: height 0.3s ease;
+            }
+
+            /* Even larger logo on Desktop viewports */
+            @media (min-width: 768px) {
+              .nav-logo-img {
+                height: 95px; 
+              }
+            }
+
+            .navbar:hover {
+              border: 1px solid rgba(197, 168, 128, 0.35);
+              border-top: 1px solid rgba(255, 255, 255, 0.45);
+              box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.25);
             }
           `}</style>
 
           <Link to="/" className="brand-mark" aria-label="Polyteleia home">
-            <span className="brand-name">POLYTELEIA</span>
-            <span className="brand-sub">{t("brand_sub")}</span>
+            <img 
+              src={logoImg} 
+              alt="Polyteleia Luxury Living Logo" 
+              className="nav-logo-img"
+            />
           </Link>
-          <div className="nav-right">
+          
+          <div className="nav-right" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <LanguageSwitcher />
             <button
               type="button"
@@ -81,7 +151,7 @@ export function Navbar({ isVisible = true, isHome = false }: NavbarProps) {
         </nav>
       )}
 
-      {/* The mobile menu drawer markup stays untouched outside the conditional wrapper */}
+      {/* Mobile menu drawer overlay remains untouched */}
       <div className={`menu-overlay ${open ? "open" : ""}`} aria-hidden={!open}>
         <div className="menu-overlay-top">
           <Link to="/" className="brand-mark" onClick={() => setOpen(false)}>

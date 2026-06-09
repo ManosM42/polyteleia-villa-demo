@@ -208,61 +208,7 @@ function HomePage() {
           background:     "transparent",
         }}
       >
-        {/* CTA — slides up as start frame dissolves */}
-        <div
-          style={{
-            textAlign:     "center",
-            color:         "#fff",
-            padding:       "0 24px",
-            opacity:       ctaOpacity,
-            transform:     `translateY(${ctaTranslateY}px)`,
-            willChange:    "opacity, transform",
-            pointerEvents: ctaOpacity < 0.05 ? "none" : "auto",
-            transition:    "opacity 0.05s, transform 0.05s",
-          }}
-        >
-          <span
-            style={{
-              color:          "var(--color-gold, #c9a84c)",
-              letterSpacing:  "0.25em",
-              fontSize:       "0.72rem",
-              textTransform:  "uppercase",
-              display:        "block",
-              marginBottom:   20,
-              fontWeight:     400,
-            }}
-          >
-            {t("hero_eyebrow")}
-          </span>
-          <h1
-            style={{
-              fontFamily:    "var(--font-display, 'Cormorant Garamond', serif)",
-              fontSize:      "clamp(2.8rem, 6vw, 5rem)",
-              fontWeight:    300,
-              letterSpacing: "0.08em",
-              color:         "#fff",
-              margin:        "0 0 20px",
-              textShadow:    "0 2px 40px rgba(0,0,0,0.45)",
-            }}
-          >
-            {t("hero_1_title")}
-          </h1>
-          <p
-            style={{
-              fontSize:      "clamp(1rem, 1.5vw, 1.2rem)",
-              color:         "rgba(255,255,255,0.82)",
-              marginBottom:  44,
-              fontWeight:    300,
-              letterSpacing: "0.05em",
-              textShadow:    "0 1px 20px rgba(0,0,0,0.5)",
-            }}
-          >
-            {t("hero_1_sub")}
-          </p>
-          <Link to="/villa" className="btn btn-outline">
-            {t("explore_villa")}
-          </Link>
-        </div>
+       
 
         {/* Scroll indicator */}
         <div

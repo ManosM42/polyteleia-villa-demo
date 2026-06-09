@@ -1106,3 +1106,123 @@ ul { list-style: none; }
 .mb-6 { margin-top: 0; margin-bottom: 24px; }
 .mb-12 { margin-bottom: 48px; }
 .gold-divider { height: 1px; background: rgba(201,169,110,0.2); margin: 24px 0; border: none; }
+
+/* Base Screen Styling */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #050505; /* Extra deep black to make the gold pop */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* When the state triggers 'hide' */
+.loading-screen.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Container with Breathing Luxury Ambient Gold Glow */
+.loading-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 260px; /* Adjust based on your logo design */
+  width: 80%;
+  position: relative;
+  
+  /* Large, soft ambient golden aura behind the logo */
+  border-radius: 50%;
+  animation: goldAtmosphericPulse 3.5s ease-in-out infinite alternate;
+}
+
+/* Logo Image Cinematic Animation with Golden Halo */
+.loading-logo-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  
+  /* Cinematic Entry States */
+  opacity: 0;
+  transform: scale(0.94);
+  filter: blur(5px) drop-shadow(0 0 0px rgba(212, 175, 55, 0));
+  animation: goldCinematicFadeIn 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+/* Cinematic Entry: Logo fades in, sharpens, and ignites its golden drop-glow */
+@keyframes goldCinematicFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(6px) drop-shadow(0 0 0px rgba(212, 175, 55, 0));
+  }
+  40% {
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    /* Multi-layered metallic gold drop shadow (Intense center + wide soft aura) */
+    filter: blur(0px) 
+            drop-shadow(0 0 8px rgba(255, 235, 180, 0.6))  /* Bright champagne core */
+            drop-shadow(0 0 25px rgba(212, 175, 55, 0.45)); /* Deep rich gold body */
+  }
+}
+
+/* Continuous Soft Ambient Pulse (Breathing premium background glow) */
+@keyframes goldAtmosphericPulse {
+  0% {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.08), 
+                0 0 80px rgba(184, 134, 11, 0.03);
+  }
+  100% {
+    box-shadow: 0 0 65px rgba(212, 175, 55, 0.22), 
+                0 0 110px rgba(184, 134, 11, 0.08);
+  }
+}
+
+/* Glowing Metallic Gold Loading Bar */
+.loading-bar {
+  margin-top: 45px;
+  width: 150px;
+  height: 2px;
+  background: rgba(212, 175, 55, 0.15); /* Muted gold base track */
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+/* Liquid Gold Progress Streak */
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  left: -100%;
+  width: 75%;
+  height: 100%;
+  /* Gradient simulating a reflection sweeping across polished gold */
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 244, 214, 0.9) 40%,  /* High gloss white-gold */
+    rgba(212, 175, 55, 1) 70%,     /* Pure liquid gold */
+    transparent
+  );
+  /* The streak's actual glow footprint */
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.8),
+              0 0 4px rgba(255, 235, 180, 1);
+  animation: goldProgress 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes goldProgress {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
