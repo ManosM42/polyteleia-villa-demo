@@ -5,12 +5,9 @@ import {
   createRootRouteWithContext,
   useRouter,
   useRouterState,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 
-import appCss from "../styles.css?url";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -46,47 +43,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "POLYTELEIA Luxury Living — Villa in Elia, Crete" },
-      { name: "description", content: "A private four-bedroom luxury villa with pool in Elia, Heraklion, Crete. Marble, brass, and warm wood — designed to feel like home." },
-      { name: "author", content: "Polyteleia" },
-      { property: "og:title", content: "POLYTELEIA Luxury Living" },
-      { property: "og:description", content: "A luxury retreat in the heart of Crete." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
-
-function RootShell({ children }: { children: ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function LayoutWrapper() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -104,19 +64,11 @@ function LayoutWrapper() {
       setShowNavbar(true);
       return;
     }
-
     const handleScroll = () => {
-      const vh = window.innerHeight;
-      if (window.scrollY > vh * 0.35) {
-        setShowNavbar(true);
-      } else {
-        setShowNavbar(false);
-      }
+      setShowNavbar(window.scrollY > window.innerHeight * 0.35);
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
 

@@ -48,6 +48,7 @@ const REVIEWS: Array<{ key: TranslationKey; name: string; country: string }> = [
   { key: "review_4", name: "Anna K.",     country: "Germany" },
   { key: "review_5", name: "Nikos P.",    country: "Greece" },
 ];
+
 // ─── Scroll progress hook ─────────────────────────────────────────────────────
 
 function useScrollProgress(startPx: number, endPx: number) {
@@ -70,7 +71,7 @@ function HomePage() {
   useScrollAnimation();
   const { t } = useTranslation();
   const [galleryIdx, setGalleryIdx] = useState(0);
-  const [isReviewPaused, setIsReviewPaused] = useState(false); // <--- PLACE IT HERE
+  const [isReviewPaused, setIsReviewPaused] = useState(false);
 
   const [vh, setVh] = useState(typeof window !== "undefined" ? window.innerHeight : 800);
   useEffect(() => {
@@ -79,137 +80,135 @@ function HomePage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // ─── THE CRITICAL FIX ───────────────────────────────────────────────────────
-  // The global body has background: #0E0C0A (solid black) which paints over
-  // our fixed image layers. We override it to transparent on this page only,
-  // and restore it when navigating away.
+  // Force body/html transparent so our fixed layers show through
   useEffect(() => {
-  // Create an explicit <style> element to force transparency globally
-  const styleEl = document.createElement("style");
-  styleEl.innerHTML = `
-    html, body, #root, [data-reactroot], .app-wrapper, main {
-      background: transparent !important;
-      background-color: transparent !important;
-    }
-  `;
-  document.head.appendChild(styleEl);
+    const styleEl = document.createElement("style");
+    styleEl.innerHTML = `
+      html, body, #root, [data-reactroot], .app-wrapper, main {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+    return () => { styleEl.remove(); };
+  }, []);
 
-  return () => {
-    // Safely remove the style injection when leaving the page
-    styleEl.remove();
-  };
-}, []);
-
-  // start.jpeg: fully visible at load, fades out over first ~80vh of scrolling
   const startFadeProgress = useScrollProgress(vh * 0.10, vh * 0.75);
-  // end.jpeg: fades in starting at 10vh, fully visible by 70vh
   const endFadeProgress   = useScrollProgress(vh * 0.10, vh * 0.70);
 
-  // Smooth ease curve
   const ease = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
   const startOpacity = 1 - ease(startFadeProgress);
   const endOpacity   = ease(endFadeProgress);
 
-  // Hero CTA appears once start is ~50% faded
   const ctaOpacity    = Math.max(0, (startFadeProgress - 0.45) / 0.55);
   const ctaTranslateY = (1 - ctaOpacity) * 50;
-
-  // Scroll indicator fades out quickly
   const scrollIndicatorOpacity = Math.max(0, 1 - startFadeProgress * 3);
+
+  // ── Portrait detection in JS — guaranteed to work, no CSS media query ──
+  // Both images are 2752×1536 (16:9). On portrait phone the viewport is
+  // taller than wide, so "cover" zooms the image to fill width and crops
+  // most of the height. Fix: use "auto 100svh" to fill by height instead.
+  const [isPortrait, setIsPortrait] = useState(
+    typeof window !== "undefined" ? window.innerHeight > window.innerWidth : false
+  );
+  useEffect(() => {
+    const update = () => setIsPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    update();
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
+  }, []);
+
+  // On portrait: fill by height (auto width) so full villa is visible vertically
+  // On landscape: cover fills the screen perfectly
+  const bgSize = isPortrait ? "auto 100svh" : "cover";
 
   return (
     <>
-      {/*
-       * ─── FIXED BACKGROUND LAYERS ───────────────────────────────────────
-       *
-       * z-index: -2  →  start.jpeg (villa + POLYTELEIA text baked in)
-       * z-index: -1  →  end.jpeg   (clean villa, stays pinned all page)
-       *
-       * Using <img> tags (not CSS background-image) so bundler asset
-       * resolution is guaranteed. Both layers sit BELOW all page content.
-       */}
+      <style>{`
+        @keyframes marqueeLeftToRight {
+          0%   { transform: translateX(-50%); }
+          100% { transform: translateX(0%); }
+        }
+        .reviews-track {
+          display: flex;
+          gap: 24px;
+          width: max-content;
+          animation: marqueeLeftToRight 35s linear infinite;
+        }
+      `}</style>
 
-      {/* Layer 1: start.jpeg — fades OUT as user scrolls */}
+      {/* ── Layer 1: start.jpeg — clean villa, fades OUT as user scrolls ─── */}
       <div
         aria-hidden
         style={{
-          position:   "fixed",
-          inset:      0,
-          zIndex:     -2,
-          overflow:   "hidden",
-          opacity:    startOpacity,
-          willChange: "opacity",
-          transition: "opacity 0.05s linear",
-          // Ensure nothing from parent stacking context clips this
-          pointerEvents: "none",
+          position:           "fixed",
+          inset:              0,
+          zIndex:             -2,
+          pointerEvents:      "none",
+          backgroundImage:    `url(${startFrame})`,
+          backgroundRepeat:   "no-repeat",
+          backgroundSize:     bgSize,
+          backgroundPosition: "center center",
+          opacity:            startOpacity,
+          willChange:         "opacity",
+          transition:         "opacity 0.05s linear",
         }}
-      >
-        <img
-          src={startFrame}
-          alt=""
-          style={{
-            width:          "100%",
-            height:         "100%",
-            objectFit:      "cover",
-            objectPosition: "center center",
-            display:        "block",
-          }}
-        />
-      </div>
+      />
 
-      {/* Layer 2: end.jpeg — fades IN and stays pinned behind entire page */}
+      {/* ── Layer 2: end.jpeg — POLYTELEIA letters, fades IN as page bg ──── */}
       <div
         aria-hidden
         style={{
-          position:   "fixed",
-          inset:      0,
-          zIndex:     -1,
-          overflow:   "hidden",
-          opacity:    endOpacity,
-          willChange: "opacity",
-          transition: "opacity 0.05s linear",
-          pointerEvents: "none",
+          position:           "fixed",
+          inset:              0,
+          zIndex:             -1,
+          pointerEvents:      "none",
+          backgroundImage:    `url(${endFrame})`,
+          backgroundRepeat:   "no-repeat",
+          backgroundSize:     bgSize,
+          // end.jpeg letters are in upper-left — on portrait shift left so
+          // they stay visible when the wide image is centered by height
+          backgroundPosition: isPortrait ? "25% center" : "center center",
+          opacity:            endOpacity,
+          willChange:         "opacity",
+          transition:         "opacity 0.05s linear",
         }}
       >
-        <img
-          src={endFrame}
-          alt=""
-          style={{
-            width:          "100%",
-            height:         "100%",
-            objectFit:      "cover",
-            objectPosition: "center center",
-            display:        "block",
-          }}
-        />
-        {/* Subtle dark veil for text legibility over the villa */}
+        {/* Dark gradient veil for text legibility */}
         <div
           style={{
             position:      "absolute",
             inset:         0,
-            background:    "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.40) 100%)",
+            background:    "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0.45) 100%)",
             pointerEvents: "none",
           }}
         />
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          HERO SECTION — 100vh transparent window onto start.jpeg
+          HERO — 100svh transparent window onto start.jpeg
+          Using svh (small viewport height) so mobile browser chrome
+          doesn't cut the section short.
           ═══════════════════════════════════════════════════════════════════ */}
       <section
         style={{
           position:       "relative",
           zIndex:         1,
-          height:         "100vh",
+          // svh = small viewport height, accounts for mobile browser chrome
+          // Falls back to 100vh on browsers that don't support it
+          height:         "100svh",
+          minHeight:      "100vh",
           display:        "flex",
           alignItems:     "center",
           justifyContent: "center",
           background:     "transparent",
         }}
       >
-       
-
         {/* Scroll indicator */}
         <div
           className="scroll-indicator"
@@ -220,8 +219,66 @@ function HomePage() {
         </div>
       </section>
 
+      {/* ── Hero CTA — floats below hero, reveals as start fades ─────────── */}
+      <div
+        style={{
+          position:      "relative",
+          zIndex:        1,
+          textAlign:     "center",
+          color:         "#fff",
+          padding:       "60px 24px 80px",
+          opacity:       ctaOpacity,
+          transform:     `translateY(${ctaTranslateY}px)`,
+          willChange:    "opacity, transform",
+          pointerEvents: ctaOpacity < 0.05 ? "none" : "auto",
+          transition:    "opacity 0.05s, transform 0.05s",
+        }}
+      >
+        <span
+          style={{
+            color:         "var(--color-gold, #c9a84c)",
+            letterSpacing: "0.25em",
+            fontSize:      "0.72rem",
+            textTransform: "uppercase",
+            display:       "block",
+            marginBottom:  20,
+            fontWeight:    400,
+          }}
+        >
+          {t("hero_eyebrow")}
+        </span>
+        <h1
+          style={{
+            fontFamily:    "var(--font-display, 'Cormorant Garamond', serif)",
+            fontSize:      "clamp(2.4rem, 6vw, 5rem)",
+            fontWeight:    300,
+            letterSpacing: "0.08em",
+            color:         "#fff",
+            margin:        "0 0 20px",
+            textShadow:    "0 2px 40px rgba(0,0,0,0.45)",
+          }}
+        >
+          {t("hero_1_title")}
+        </h1>
+        <p
+          style={{
+            fontSize:      "clamp(0.95rem, 1.5vw, 1.2rem)",
+            color:         "rgba(255,255,255,0.82)",
+            marginBottom:  44,
+            fontWeight:    300,
+            letterSpacing: "0.05em",
+            textShadow:    "0 1px 20px rgba(0,0,0,0.5)",
+          }}
+        >
+          {t("hero_1_sub")}
+        </p>
+        <Link to="/villa" className="btn btn-outline">
+          {t("explore_villa")}
+        </Link>
+      </div>
+
       {/* ═══════════════════════════════════════════════════════════════════
-          STATS STRIP — liquid glass
+          STATS STRIP
           ═══════════════════════════════════════════════════════════════════ */}
       <section style={liquidGlassSection}>
         <div className="container">
@@ -234,11 +291,11 @@ function HomePage() {
               <div key={label as string} className="stagger-child fade-up" style={{ color: "#fff", textAlign: "center" }}>
                 <div
                   style={{
-                    fontFamily:    "var(--font-display, 'Cormorant Garamond', serif)",
-                    fontSize:      "clamp(2.4rem, 5vw, 3.8rem)",
-                    fontWeight:    300,
-                    color:         "var(--color-gold, #c9a84c)",
-                    lineHeight:    1,
+                    fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
+                    fontSize:   "clamp(2.4rem, 5vw, 3.8rem)",
+                    fontWeight: 300,
+                    color:      "var(--color-gold, #c9a84c)",
+                    lineHeight: 1,
                   }}
                 >
                   {num}
@@ -259,60 +316,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-      <div
-          style={{
-            textAlign:     "center",
-            color:         "#fff",
-            padding:       "0 24px",
-            opacity:       ctaOpacity,
-            transform:     `translateY(${ctaTranslateY}px)`,
-            willChange:    "opacity, transform",
-            pointerEvents: ctaOpacity < 0.05 ? "none" : "auto",
-            transition:    "opacity 0.05s, transform 0.05s",
-          }}
-        >
-          <span
-            style={{
-              color:          "var(--color-gold, #c9a84c)",
-              letterSpacing:  "0.25em",
-              fontSize:       "0.72rem",
-              textTransform:  "uppercase",
-              display:        "block",
-              marginBottom:   20,
-              fontWeight:     400,
-            }}
-          >
-            {t("hero_eyebrow")}
-          </span>
-          <h1
-            style={{
-              fontFamily:    "var(--font-display, 'Cormorant Garamond', serif)",
-              fontSize:      "clamp(2.8rem, 6vw, 5rem)",
-              fontWeight:    300,
-              letterSpacing: "0.08em",
-              color:         "#fff",
-              margin:        "0 0 20px",
-              textShadow:    "0 2px 40px rgba(0,0,0,0.45)",
-            }}
-          >
-            {t("hero_1_title")}
-          </h1>
-          <p
-            style={{
-              fontSize:      "clamp(1rem, 1.5vw, 1.2rem)",
-              color:         "rgba(255,255,255,0.82)",
-              marginBottom:  44,
-              fontWeight:    300,
-              letterSpacing: "0.05em",
-              textShadow:    "0 1px 20px rgba(0,0,0,0.5)",
-            }}
-          >
-            {t("hero_1_sub")}
-          </p>
-          <Link to="/villa" className="btn btn-outline">
-            {t("explore_villa")}
-          </Link>
-        </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
           3D GALLERY
@@ -382,7 +385,7 @@ function HomePage() {
       <GoldDivider />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          FACILITIES — liquid glass cards
+          FACILITIES
           ═══════════════════════════════════════════════════════════════════ */}
       <section className="section" style={transparentSection}>
         <div className="container">
@@ -405,87 +408,50 @@ function HomePage() {
       <GoldDivider />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          REVIEWS — liquid glass cards
+          REVIEWS — infinite marquee
           ═══════════════════════════════════════════════════════════════════ */}
-
-<section className="section" style={{ ...transparentSection, overflow: "hidden" }}>
-  
-  {/* Injecting dynamic CSS keyframes directly for the infinite marquee */}
-  <style>{`
-    @keyframes marqueeLeftToRight {
-      0% { transform: translateX(-50%); }
-      100% { transform: translateX(0%); }
-    }
-    .reviews-track {
-      display: flex;
-      gap: 24px;
-      width: max-content;
-      /* Adjust the timing (e.g., 35s) to make the crawl faster or slower */
-      animation: marqueeLeftToRight 35s linear infinite;
-    }
-  `}</style>
-
-  <div className="container">
-    <div className="text-center" style={{ marginBottom: 64 }}>
-      <span className="eyebrow fade-up" style={eyebrowStyle}>{t("testimonials")}</span>
-      <h2 className="display fade-up" style={sectionTitleStyle}>{t("guests_say")}</h2>
-    </div>
-  </div>
-
-  {/* Full-width container window for the rolling marquee track */}
-  <div 
-    style={{ 
-      width: "100%", 
-      overflow: "hidden",
-      padding: "20px 0",
-      cursor: "pointer"
-    }}
-    // Event listeners to toggle the pausing mechanism on press or click hold
-    onMouseDown={() => setIsReviewPaused(true)}
-    onMouseUp={() => setIsReviewPaused(false)}
-    onMouseLeave={() => setIsReviewPaused(false)}
-    onTouchStart={() => setIsReviewPaused(true)}
-    onTouchEnd={() => setIsReviewPaused(false)}
-  >
-    <div 
-      className="reviews-track"
-      style={{
-        animationPlayState: isReviewPaused ? "paused" : "running"
-      }}
-    >
-      {/* We render the array twice [...REVIEWS, ...REVIEWS] 
-        to create the perfect visual infinite loop texture link.
-      */}
-      {[...REVIEWS, ...REVIEWS].map((r, index) => (
-        <div 
-          key={`${r.key}-${index}`} 
-          style={{
-            ...liquidGlassReviewCard,
-            // Lowering flex-shrink tells the browser not to squash our cards inside max-content
-            flexShrink: 0 
-          }}
-        >
-          <div style={{ fontSize: "3.2rem", lineHeight: 1, color: "var(--color-gold, #c9a84c)", marginBottom: 6, fontFamily: "Georgia, serif", opacity: 0.65 }}>
-            "
+      <section className="section" style={{ ...transparentSection, overflow: "hidden" }}>
+        <div className="container">
+          <div className="text-center" style={{ marginBottom: 64 }}>
+            <span className="eyebrow fade-up" style={eyebrowStyle}>{t("testimonials")}</span>
+            <h2 className="display fade-up" style={sectionTitleStyle}>{t("guests_say")}</h2>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.88)", fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", marginBottom: 20, flexGrow: 1 }}>
-            {t(r.key)}
-          </p>
-          <div style={{ display: "flex", gap: 3, marginBottom: 10, color: "var(--color-gold, #c9a84c)" }}>
-            {[...Array(5)].map((_, i) => <Star key={i} />)}
-          </div>
-          <div style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem", letterSpacing: "0.05em" }}>{r.name}</div>
-          <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", marginTop: 2 }}>{r.country}</div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+        <div
+          style={{ width: "100%", overflow: "hidden", padding: "20px 0", cursor: "pointer" }}
+          onMouseDown={() => setIsReviewPaused(true)}
+          onMouseUp={() => setIsReviewPaused(false)}
+          onMouseLeave={() => setIsReviewPaused(false)}
+          onTouchStart={() => setIsReviewPaused(true)}
+          onTouchEnd={() => setIsReviewPaused(false)}
+        >
+          <div
+            className="reviews-track"
+            style={{ animationPlayState: isReviewPaused ? "paused" : "running" }}
+          >
+            {[...REVIEWS, ...REVIEWS].map((r, index) => (
+              <div key={`${r.key}-${index}`} style={{ ...liquidGlassReviewCard, flexShrink: 0 }}>
+                <div style={{ fontSize: "3.2rem", lineHeight: 1, color: "var(--color-gold, #c9a84c)", marginBottom: 6, fontFamily: "Georgia, serif", opacity: 0.65 }}>
+                  "
+                </div>
+                <p style={{ color: "rgba(255,255,255,0.88)", fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", marginBottom: 20, flexGrow: 1 }}>
+                  {t(r.key)}
+                </p>
+                <div style={{ display: "flex", gap: 3, marginBottom: 10, color: "var(--color-gold, #c9a84c)" }}>
+                  {[...Array(5)].map((_, i) => <Star key={i} />)}
+                </div>
+                <div style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem", letterSpacing: "0.05em" }}>{r.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", marginTop: 2 }}>{r.country}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <GoldDivider />
 
       {/* ═══════════════════════════════════════════════════════════════════
-          MAP — liquid glass frame
+          MAP
           ═══════════════════════════════════════════════════════════════════ */}
       <section className="section" style={transparentSection}>
         <div className="container text-center" style={{ marginBottom: 48 }}>
@@ -511,7 +477,6 @@ function HomePage() {
             loading="lazy"
           />
         </div>
-
         <div
           style={{
             display:        "flex",
@@ -528,22 +493,9 @@ function HomePage() {
           ].map(({ label, value }) => (
             <div
               key={label as string}
-              style={{
-                ...liquidGlassCard,
-                padding:   "20px 32px",
-                minWidth:  160,
-                textAlign: "center",
-              }}
+              style={{ ...liquidGlassCard, padding: "20px 32px", minWidth: 160, textAlign: "center" }}
             >
-              <div
-                style={{
-                  fontSize:      "0.67rem",
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  color:         "var(--color-gold, #c9a84c)",
-                  marginBottom:  8,
-                }}
-              >
+              <div style={{ fontSize: "0.67rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--color-gold, #c9a84c)", marginBottom: 8 }}>
                 {label}
               </div>
               <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.92rem" }}>
@@ -554,7 +506,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Bottom spacer so footer doesn't cut off the last section */}
       <div style={{ height: 100, position: "relative", zIndex: 1 }} />
     </>
   );
@@ -562,14 +513,12 @@ function HomePage() {
 
 // ─── Style tokens ─────────────────────────────────────────────────────────────
 
-/** All content sections are transparent so end.jpeg shows through */
 const transparentSection: React.CSSProperties = {
   position:   "relative",
   zIndex:     1,
   background: "transparent",
 };
 
-/** Stats strip — very subtle glass band */
 const liquidGlassSection: React.CSSProperties = {
   position:             "relative",
   zIndex:               1,
@@ -581,12 +530,7 @@ const liquidGlassSection: React.CSSProperties = {
   borderBottom:         "1px solid rgba(255,255,255,0.07)",
 };
 
-/**
- * Liquid glass card — frosted with a top-edge highlight to mimic
- * the refractive quality of real glass or water.
- */
 const liquidGlassCard: React.CSSProperties = {
-
   backdropFilter:       "blur(22px) saturate(1.8) brightness(1.05)",
   WebkitBackdropFilter: "blur(22px) saturate(1.8) brightness(1.05)",
   border:               "1px solid rgba(255,255,255,0.15)",
@@ -640,12 +584,12 @@ const eyebrowStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontFamily:  "var(--font-display, 'Cormorant Garamond', serif)",
-  fontSize:    "clamp(2rem, 4vw, 3.2rem)",
-  fontWeight:  300,
-  color:       "#fff",
+  fontFamily:   "var(--font-display, 'Cormorant Garamond', serif)",
+  fontSize:     "clamp(2rem, 4vw, 3.2rem)",
+  fontWeight:   300,
+  color:        "#fff",
   marginBottom: 64,
-  textShadow:  "0 2px 20px rgba(0,0,0,0.3)",
+  textShadow:   "0 2px 20px rgba(0,0,0,0.3)",
 };
 
 const cardTitleStyle: React.CSSProperties = {
