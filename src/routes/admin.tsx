@@ -37,6 +37,56 @@ function getCalDays(month: Date) {
   return { first: first === 0 ? 6 : first - 1, days: new Date(year, m + 1, 0).getDate() };
 }
 
+// ── VILLA SELECTOR ────────────────────────────────────────────────────────
+interface VillaSelectorProps {
+  selected: 1 | 2;
+  onSelect: (v: 1 | 2) => void;
+}
+function VillaSelector({ selected, onSelect }: VillaSelectorProps) {
+  return (
+    <div style={{ display: "flex", gap: 10 }}>
+      {([1, 2] as const).map((v) => (
+        <button
+          key={v}
+          onClick={() => onSelect(v)}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 4,
+            padding: "12px 28px",
+            borderRadius: 14,
+            cursor: "pointer",
+            border: selected === v
+              ? "1px solid rgba(197,168,128,0.55)"
+              : "1px solid rgba(255,255,255,0.08)",
+            borderTop: selected === v
+              ? "1px solid rgba(197,168,128,0.75)"
+              : "1px solid rgba(255,255,255,0.14)",
+            background: selected === v
+              ? "linear-gradient(135deg, rgba(197,168,128,0.14) 0%, rgba(197,168,128,0.04) 100%)"
+              : "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+            backdropFilter: "blur(20px)",
+            color: selected === v ? "#c5a880" : "rgba(255,255,255,0.45)",
+            transition: "all 0.2s ease",
+            boxShadow: selected === v
+              ? "0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(197,168,128,0.1), inset 0 1px 1px rgba(197,168,128,0.15)"
+              : "0 4px 12px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.06)",
+            minWidth: 100,
+          }}
+        >
+          <span style={{ fontSize: "1.4rem", fontWeight: 200, letterSpacing: 2, lineHeight: 1 }}>
+            {v === 1 ? "I" : "II"}
+          </span>
+          <span style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: 3, fontWeight: 500 }}>
+            VILLA {v === 1 ? "I" : "II"}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Admin() {
   const [authed, setAuthed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
@@ -44,6 +94,9 @@ function Admin() {
   const [password, setPassword] = React.useState("");
   const [loginErr, setLoginErr] = React.useState("");
   const [loggingIn, setLoggingIn] = React.useState(false);
+
+  // Villa selection
+  const [villa, setVilla] = React.useState<1 | 2>(1);
 
   const [bookings, setBookings] = React.useState<Booking[]>([]);
   const [blocked, setBlocked] = React.useState<string[]>([]);
@@ -59,9 +112,9 @@ function Admin() {
 
   const today = formatDate(new Date());
 
-  // Session check — simple, no hanging
+  // Session check
   React.useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 4000); // hard fallback
+    const timer = setTimeout(() => setLoading(false), 4000);
     supabase.auth.getSession()
       .then(({ data }) => {
         setAuthed(!!data.session);
@@ -100,16 +153,24 @@ function Admin() {
     setSelected(null);
   };
 
-  React.useEffect(() => {
+  // Fetch data based on selected villa
+  const fetchVillaData = React.useCallback(async (v: 1 | 2) => {
     if (!authed) return;
     setLoadingData(true);
+    setSelected(null);
+
+    const bookingsTable = v === 1 ? "bookings" : "bookings2";
+    const blockedTable = v === 1 ? "blocked_dates" : "blocked_dates2";
+
     Promise.all([
-      supabase.from("bookings").select("*").order("created_at", { ascending: false }),
-      supabase.from("blocked_dates").select("date"),
+      supabase.from(bookingsTable).select("*").order("created_at", { ascending: false }),
+      supabase.from(blockedTable).select("date"),
       supabase.from("pricing").select("price_per_night").single(),
     ]).then(([b, bl, p]) => {
       if (b.data) setBookings(b.data as Booking[]);
+      else setBookings([]);
       if (bl.data) setBlocked(bl.data.map((d: { date: string }) => d.date));
+      else setBlocked([]);
       if (p.data) {
         setPrice(Number(p.data.price_per_night));
         setNewPrice(String(p.data.price_per_night));
@@ -118,25 +179,39 @@ function Admin() {
     }).catch(() => setLoadingData(false));
   }, [authed]);
 
+  // Load data when authed
+  React.useEffect(() => {
+    if (authed) fetchVillaData(villa);
+  }, [authed]);
+
+  // Reload when villa changes
+  const handleVillaChange = (v: 1 | 2) => {
+    setVilla(v);
+    fetchVillaData(v);
+  };
+
   const markStatus = async (id: string, status: "read" | "unread") => {
-    await supabase.from("bookings").update({ status }).eq("id", id);
+    const bookingsTable = villa === 1 ? "bookings" : "bookings2";
+    await supabase.from(bookingsTable).update({ status }).eq("id", id);
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
     if (selected?.id === id) setSelected(s => s ? { ...s, status } : s);
   };
 
   const deleteBooking = async (id: string) => {
     if (!confirm("Permanently delete this booking?")) return;
-    await supabase.from("bookings").delete().eq("id", id);
+    const bookingsTable = villa === 1 ? "bookings" : "bookings2";
+    await supabase.from(bookingsTable).delete().eq("id", id);
     setBookings(prev => prev.filter(b => b.id !== id));
     setSelected(null);
   };
 
   const toggleBlocked = async (dateStr: string) => {
+    const blockedTable = villa === 1 ? "blocked_dates" : "blocked_dates2";
     if (blocked.includes(dateStr)) {
-      await supabase.from("blocked_dates").delete().eq("date", dateStr);
+      await supabase.from(blockedTable).delete().eq("date", dateStr);
       setBlocked(prev => prev.filter(d => d !== dateStr));
     } else {
-      await supabase.from("blocked_dates").insert({ date: dateStr });
+      await supabase.from(blockedTable).insert({ date: dateStr });
       setBlocked(prev => [...prev, dateStr]);
     }
   };
@@ -160,7 +235,7 @@ function Admin() {
   const unreadCount = bookings.filter(b => b.status === "unread").length;
   const { first: startDay, days: daysInMonth } = getCalDays(calMonth);
 
-  // ── LOADING ─────────────────────────────────────────────────────────────
+  // ── LOADING ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div style={styles.page}>
@@ -235,6 +310,8 @@ function Admin() {
           <span style={{ letterSpacing: 3, fontWeight: 300 }}>POLYTELEIA</span>
           <span style={styles.pillTag}>Admin</span>
         </div>
+        {/* Villa Selector in header */}
+        <VillaSelector selected={villa} onSelect={handleVillaChange} />
         <button onClick={handleLogout} style={styles.btnGhost}>Sign Out</button>
       </header>
 
@@ -250,9 +327,25 @@ function Admin() {
               borderBottom: tab === t ? "1px solid #c5a880" : "1px solid transparent",
             }}
           >
-            {t === "bookings" ? `Κρατήσεις${unreadCount > 0 ? ` (${unreadCount})` : ""}` : t === "calendar" ? "Ημερολόγιο" : "Τιμολόγηση"}
+            {t === "bookings"
+              ? `Κρατήσεις${unreadCount > 0 ? ` (${unreadCount})` : ""}`
+              : t === "calendar"
+              ? "Ημερολόγιο"
+              : "Τιμολόγηση"}
           </button>
         ))}
+        {/* Villa badge next to tabs */}
+        <span style={{
+          marginLeft: "auto",
+          alignSelf: "center",
+          fontSize: "0.65rem",
+          textTransform: "uppercase",
+          letterSpacing: 2.5,
+          color: "rgba(197,168,128,0.6)",
+          paddingRight: 4,
+        }}>
+          Villa {villa === 1 ? "I" : "II"}
+        </span>
       </nav>
 
       {/* Content */}
@@ -276,7 +369,9 @@ function Admin() {
                 ))}
               </div>
               {loadingData && <p style={styles.muted}>Φόρτωση…</p>}
-              {!loadingData && filtered.length === 0 && <p style={styles.muted}>Δεν υπάρχουν κρατήσεις</p>}
+              {!loadingData && filtered.length === 0 && (
+                <p style={styles.muted}>Δεν υπάρχουν κρατήσεις για Villa {villa === 1 ? "I" : "II"}</p>
+              )}
               {filtered.map(b => (
                 <div
                   key={b.id}
@@ -317,13 +412,22 @@ function Admin() {
                         {new Date(selected.created_at).toLocaleDateString("el-GR", { day: "numeric", month: "long", year: "numeric" })}
                       </p>
                     </div>
-                    <span style={{
-                      padding: "4px 12px", borderRadius: 20, fontSize: "0.65rem", textTransform: "uppercase" as const, letterSpacing: 1,
-                      background: selected.status === "unread" ? "rgba(197,168,128,0.15)" : "rgba(255,255,255,0.06)",
-                      color: selected.status === "unread" ? "#c5a880" : "rgba(255,255,255,0.4)",
-                    }}>
-                      {selected.status === "unread" ? "Αδιάβαστη" : "Διαβασμένη"}
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                      <span style={{
+                        padding: "4px 12px", borderRadius: 20, fontSize: "0.65rem", textTransform: "uppercase" as const, letterSpacing: 1,
+                        background: selected.status === "unread" ? "rgba(197,168,128,0.15)" : "rgba(255,255,255,0.06)",
+                        color: selected.status === "unread" ? "#c5a880" : "rgba(255,255,255,0.4)",
+                      }}>
+                        {selected.status === "unread" ? "Αδιάβαστη" : "Διαβασμένη"}
+                      </span>
+                      <span style={{
+                        padding: "4px 12px", borderRadius: 20, fontSize: "0.65rem", textTransform: "uppercase" as const, letterSpacing: 1,
+                        background: "rgba(197,168,128,0.08)", color: "rgba(197,168,128,0.7)",
+                        border: "1px solid rgba(197,168,128,0.2)",
+                      }}>
+                        Villa {villa === 1 ? "I" : "II"}
+                      </span>
+                    </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
                     {[
@@ -366,7 +470,12 @@ function Admin() {
         {tab === "calendar" && (
           <div style={{ maxWidth: 680, margin: "0 auto" }}>
             <div style={styles.card}>
-              <h2 style={styles.panelTitle}>Διαχείριση Διαθεσιμότητας</h2>
+              <h2 style={styles.panelTitle}>
+                Διαχείριση Διαθεσιμότητας
+                <span style={{ fontSize: "0.8rem", fontWeight: 300, color: "#c5a880", marginLeft: 12 }}>
+                  — Villa {villa === 1 ? "I" : "II"}
+                </span>
+              </h2>
               <p style={styles.panelSub}>Κλικ σε ημέρα για εναλλαγή Ανοιχτής / Κλειστής.</p>
               <div style={{ display: "flex", gap: 20, marginBottom: 24 }}>
                 <span style={styles.legend}><span style={{ ...styles.swatch, background: "rgba(239,68,68,0.4)", border: "1px solid rgba(239,68,68,0.6)" }} /> Κλειστή</span>
@@ -418,7 +527,9 @@ function Admin() {
           <div style={{ maxWidth: 440, margin: "0 auto" }}>
             <div style={styles.card}>
               <h2 style={styles.panelTitle}>Τιμολόγηση</h2>
-              <p style={styles.panelSub}>Τιμή βάσης ανά διανυκτέρευση.</p>
+              <p style={styles.panelSub}>
+                Κοινή τιμή βάσης ανά διανυκτέρευση και για τις δύο βίλες.
+              </p>
               <label style={styles.label}>Τιμή ανά βράδυ (€)</label>
               <div style={{ display: "flex", marginBottom: 24 }}>
                 <input
@@ -440,6 +551,9 @@ function Admin() {
                   </div>
                 ))}
               </div>
+              <p style={{ marginTop: 20, fontSize: "0.75rem", color: "rgba(255,255,255,0.25)", lineHeight: 1.6, borderLeft: "2px solid rgba(197,168,128,0.2)", paddingLeft: 12 }}>
+                Η τιμή ισχύει και για τις δύο βίλες (Villa I & Villa II).
+              </p>
             </div>
           </div>
         )}
@@ -465,7 +579,7 @@ const styles = {
     boxSizing: "border-box" as const,
   },
   tabs: {
-    width: "100%", display: "flex", gap: 0,
+    width: "100%", display: "flex", gap: 0, alignItems: "center",
     borderBottom: "1px solid rgba(255,255,255,0.06)",
     padding: "0 40px", boxSizing: "border-box" as const,
   },

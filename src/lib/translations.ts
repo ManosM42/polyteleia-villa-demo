@@ -27,8 +27,8 @@ export const translations = {
   scroll: { en: "Scroll", el: "Κύλιση" },
 
   // Stats
-  bedrooms: { en: "Bedrooms", el: "Υπνοδωμάτια" },
-  pool: { en: "Private Pool", el: "Ιδιωτική Πισίνα" },
+  bedrooms: { en: "Villas", el: "Βίλες" },
+  pool: { en: "Private Pools", el: "Ιδιωτικές Πισίνες" },
   rating: { en: "Rated Experience", el: "Εμπειρία Αξιολογημένη" },
 
   // Gallery
@@ -39,8 +39,8 @@ export const translations = {
   amenities: { en: "Amenities", el: "Παροχές" },
   everything_need: { en: "Everything You Need", el: "Όλα Όσα Χρειάζεστε" },
   fac_pool: { en: "Private Pool", el: "Ιδιωτική Πισίνα" },
-  fac_bedrooms: { en: "4 Bedrooms", el: "4 Υπνοδωμάτια" },
-  fac_baths: { en: "3 Bathrooms", el: "3 Μπάνια" },
+  fac_bedrooms: { en: "2 King Bedrooms", el: "2 Υπνοδωμάτια με King Size Κρεβάτια" },
+  fac_baths: { en: "2 ensuite Bathrooms", el: "2 ιδιωτικά Μπάνια" },
   fac_kitchen: { en: "Fully Equipped Kitchen", el: "Πλήρως Εξοπλισμένη Κουζίνα" },
   fac_bbq: { en: "BBQ & Outdoor Dining", el: "BBQ & Υπαίθρια Τραπεζαρία" },
   fac_lounge: { en: "Outdoor Lounge", el: "Υπαίθριο Σαλόνι" },

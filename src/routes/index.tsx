@@ -284,8 +284,8 @@ function HomePage() {
         <div className="container">
           <div className="stats-grid stagger-parent">
             {[
-              { num: "4",  label: t("bedrooms") },
-              { num: "1",  label: t("pool") },
+              { num: "2",  label: t("bedrooms") },
+              { num: "2",  label: t("pool") },
               { num: "5★", label: t("rating") },
             ].map(({ num, label }) => (
               <div key={label as string} className="stagger-child fade-up" style={{ color: "#fff", textAlign: "center" }}>
