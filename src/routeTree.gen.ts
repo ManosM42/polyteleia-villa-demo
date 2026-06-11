@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VillaRouteImport } from './routes/villa'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CancellationRouteImport } from './routes/cancellation'
+import { Route as CancellationPolicyRouteImport } from './routes/cancellation-policy'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AreaRouteImport } from './routes/area'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -27,9 +27,9 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CancellationRoute = CancellationRouteImport.update({
-  id: '/cancellation',
-  path: '/cancellation',
+const CancellationPolicyRoute = CancellationPolicyRouteImport.update({
+  id: '/cancellation-policy',
+  path: '/cancellation-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookRoute = BookRouteImport.update({
@@ -58,7 +58,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
-  '/cancellation': typeof CancellationRoute
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
@@ -67,7 +67,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
-  '/cancellation': typeof CancellationRoute
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
@@ -77,7 +77,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
-  '/cancellation': typeof CancellationRoute
+  '/cancellation-policy': typeof CancellationPolicyRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
@@ -88,7 +88,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/area'
     | '/book'
-    | '/cancellation'
+    | '/cancellation-policy'
     | '/contact'
     | '/villa'
   fileRoutesByTo: FileRoutesByTo
@@ -97,7 +97,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/area'
     | '/book'
-    | '/cancellation'
+    | '/cancellation-policy'
     | '/contact'
     | '/villa'
   id:
@@ -106,7 +106,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/area'
     | '/book'
-    | '/cancellation'
+    | '/cancellation-policy'
     | '/contact'
     | '/villa'
   fileRoutesById: FileRoutesById
@@ -116,7 +116,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AreaRoute: typeof AreaRoute
   BookRoute: typeof BookRoute
-  CancellationRoute: typeof CancellationRoute
+  CancellationPolicyRoute: typeof CancellationPolicyRoute
   ContactRoute: typeof ContactRoute
   VillaRoute: typeof VillaRoute
 }
@@ -137,11 +137,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cancellation': {
-      id: '/cancellation'
-      path: '/cancellation'
-      fullPath: '/cancellation'
-      preLoaderRoute: typeof CancellationRouteImport
+    '/cancellation-policy': {
+      id: '/cancellation-policy'
+      path: '/cancellation-policy'
+      fullPath: '/cancellation-policy'
+      preLoaderRoute: typeof CancellationPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book': {
@@ -180,7 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AreaRoute: AreaRoute,
   BookRoute: BookRoute,
-  CancellationRoute: CancellationRoute,
+  CancellationPolicyRoute: CancellationPolicyRoute,
   ContactRoute: ContactRoute,
   VillaRoute: VillaRoute,
 }

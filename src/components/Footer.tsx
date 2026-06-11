@@ -27,6 +27,7 @@ export function Footer() {
               <li><Link to="/book">{t("nav_book")}</Link></li>
               <li><Link to="/book">{t("availability")}</Link></li>
               <li><Link to="/book">{t("rates")}</Link></li>
+              <li><Link to="/cancellation-policy">{t("cancel_trans")}</Link></li>
             </ul>
           </div>
           <div>

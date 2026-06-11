@@ -3,7 +3,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import endFrame from "@/assets/end.jpeg";
 
-export const Route = createFileRoute("/cancellation")({
+export const Route = createFileRoute("/cancellation-policy")({
   head: () => ({ meta: [{ title: "Cancellation Policy — Polyteleia" }] }),
   component: CancellationPolicy,
 });

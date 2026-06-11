@@ -120,6 +120,7 @@ export const translations = {
 
   // Footer
   navigation: { en: "Navigation", el: "Πλοήγηση" },
+  cancel_trans: { en: "Cancellation Policy", el: "Πολιτική Ακύρωσης" },
   reservations: { en: "Reservations", el: "Κρατήσεις" },
   availability: { en: "Availability", el: "Διαθεσιμότητα" },
   rates: { en: "Rates", el: "Τιμές" },
