@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VillaRouteImport } from './routes/villa'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CancellationRouteImport } from './routes/cancellation'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AreaRouteImport } from './routes/area'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -24,6 +25,11 @@ const VillaRoute = VillaRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CancellationRoute = CancellationRouteImport.update({
+  id: '/cancellation',
+  path: '/cancellation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookRoute = BookRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
+  '/cancellation': typeof CancellationRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
+  '/cancellation': typeof CancellationRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
@@ -69,15 +77,38 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/area': typeof AreaRoute
   '/book': typeof BookRoute
+  '/cancellation': typeof CancellationRoute
   '/contact': typeof ContactRoute
   '/villa': typeof VillaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/area' | '/book' | '/contact' | '/villa'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/area'
+    | '/book'
+    | '/cancellation'
+    | '/contact'
+    | '/villa'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/area' | '/book' | '/contact' | '/villa'
-  id: '__root__' | '/' | '/admin' | '/area' | '/book' | '/contact' | '/villa'
+  to:
+    | '/'
+    | '/admin'
+    | '/area'
+    | '/book'
+    | '/cancellation'
+    | '/contact'
+    | '/villa'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/area'
+    | '/book'
+    | '/cancellation'
+    | '/contact'
+    | '/villa'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -85,6 +116,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AreaRoute: typeof AreaRoute
   BookRoute: typeof BookRoute
+  CancellationRoute: typeof CancellationRoute
   ContactRoute: typeof ContactRoute
   VillaRoute: typeof VillaRoute
 }
@@ -103,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cancellation': {
+      id: '/cancellation'
+      path: '/cancellation'
+      fullPath: '/cancellation'
+      preLoaderRoute: typeof CancellationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book': {
@@ -141,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AreaRoute: AreaRoute,
   BookRoute: BookRoute,
+  CancellationRoute: CancellationRoute,
   ContactRoute: ContactRoute,
   VillaRoute: VillaRoute,
 }

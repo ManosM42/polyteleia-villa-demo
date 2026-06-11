@@ -502,11 +502,11 @@ function Admin() {
                   return (
                     <div
                       key={dateStr}
-                      onClick={() => !isPast && !isBooked && toggleBlocked(dateStr)}
+                      onClick={() => !isPast && toggleBlocked(dateStr)}
                       style={{
                         height: 40, display: "flex", alignItems: "center", justifyContent: "center",
                         borderRadius: 8, fontSize: "0.88rem", border: "1px solid transparent",
-                        cursor: isPast || isBooked ? "default" : "pointer",
+                        cursor: isPast ? "default" : "pointer",
                         background: isBlock ? "rgba(239,68,68,0.25)" : isBooked ? "rgba(197,168,128,0.14)" : "transparent",
                         borderColor: isBlock ? "rgba(239,68,68,0.4)" : isBooked ? "rgba(197,168,128,0.25)" : "transparent",
                         color: isPast ? "rgba(255,255,255,0.15)" : isBooked ? "#c5a880" : "rgba(255,255,255,0.8)",
