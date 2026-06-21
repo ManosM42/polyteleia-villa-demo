@@ -80,17 +80,32 @@ function HomePage() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Force body/html transparent so our fixed layers show through
+  // Inject Google Fonts for Playfair Display + Jost
   useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap";
+    document.head.appendChild(link);
+
+    // Override CSS variables used throughout the app
     const styleEl = document.createElement("style");
     styleEl.innerHTML = `
+      :root {
+        --font-display: 'Playfair Display', Georgia, serif;
+        --font-body:    'Jost', system-ui, sans-serif;
+      }
       html, body, #root, [data-reactroot], .app-wrapper, main {
         background: transparent !important;
         background-color: transparent !important;
+        font-family: var(--font-body);
       }
     `;
     document.head.appendChild(styleEl);
-    return () => { styleEl.remove(); };
+    return () => {
+      link.remove();
+      styleEl.remove();
+    };
   }, []);
 
   const startFadeProgress = useScrollProgress(vh * 0.10, vh * 0.75);
@@ -105,10 +120,6 @@ function HomePage() {
   const ctaTranslateY = (1 - ctaOpacity) * 50;
   const scrollIndicatorOpacity = Math.max(0, 1 - startFadeProgress * 3);
 
-  // ── Portrait detection in JS — guaranteed to work, no CSS media query ──
-  // Both images are 2752×1536 (16:9). On portrait phone the viewport is
-  // taller than wide, so "cover" zooms the image to fill width and crops
-  // most of the height. Fix: use "auto 100svh" to fill by height instead.
   const [isPortrait, setIsPortrait] = useState(
     typeof window !== "undefined" ? window.innerHeight > window.innerWidth : false
   );
@@ -123,8 +134,6 @@ function HomePage() {
     };
   }, []);
 
-  // On portrait: fill by height (auto width) so full villa is visible vertically
-  // On landscape: cover fills the screen perfectly
   const bgSize = isPortrait ? "auto 100svh" : "cover";
 
   return (
@@ -142,7 +151,7 @@ function HomePage() {
         }
       `}</style>
 
-      {/* ── Layer 1: start.jpeg — clean villa, fades OUT as user scrolls ─── */}
+      {/* ── Layer 1: start.jpeg ─── */}
       <div
         aria-hidden
         style={{
@@ -160,7 +169,7 @@ function HomePage() {
         }}
       />
 
-      {/* ── Layer 2: end.jpeg — POLYTELEIA letters, fades IN as page bg ──── */}
+      {/* ── Layer 2: end.jpeg ──── */}
       <div
         aria-hidden
         style={{
@@ -171,15 +180,12 @@ function HomePage() {
           backgroundImage:    `url(${endFrame})`,
           backgroundRepeat:   "no-repeat",
           backgroundSize:     bgSize,
-          // end.jpeg letters are in upper-left — on portrait shift left so
-          // they stay visible when the wide image is centered by height
           backgroundPosition: isPortrait ? "25% center" : "center center",
           opacity:            endOpacity,
           willChange:         "opacity",
           transition:         "opacity 0.05s linear",
         }}
       >
-        {/* Dark gradient veil for text legibility */}
         <div
           style={{
             position:      "absolute",
@@ -190,17 +196,11 @@ function HomePage() {
         />
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          HERO — 100svh transparent window onto start.jpeg
-          Using svh (small viewport height) so mobile browser chrome
-          doesn't cut the section short.
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ HERO ═══ */}
       <section
         style={{
           position:       "relative",
           zIndex:         1,
-          // svh = small viewport height, accounts for mobile browser chrome
-          // Falls back to 100vh on browsers that don't support it
           height:         "100svh",
           minHeight:      "100vh",
           display:        "flex",
@@ -209,17 +209,18 @@ function HomePage() {
           background:     "transparent",
         }}
       >
-        {/* Scroll indicator */}
         <div
           className="scroll-indicator"
           style={{ opacity: scrollIndicatorOpacity, pointerEvents: "none" }}
         >
           <span className="line" />
-          <span className="label">{t("scroll")}</span>
+          <span className="label" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.3em", fontSize: "0.65rem" }}>
+            {t("scroll")}
+          </span>
         </div>
       </section>
 
-      {/* ── Hero CTA — floats below hero, reveals as start fades ─────────── */}
+      {/* ── Hero CTA ─────────── */}
       <div
         style={{
           position:      "relative",
@@ -237,36 +238,39 @@ function HomePage() {
         <span
           style={{
             color:         "var(--color-gold, #c9a84c)",
-            letterSpacing: "0.25em",
-            fontSize:      "0.72rem",
+            letterSpacing: "0.35em",
+            fontSize:      "0.68rem",
             textTransform: "uppercase",
             display:       "block",
-            marginBottom:  20,
-            fontWeight:    400,
+            marginBottom:  24,
+            fontWeight:    500,
+            fontFamily:    "var(--font-body)",
           }}
         >
           {t("hero_eyebrow")}
         </span>
         <h1
           style={{
-            fontFamily:    "var(--font-display, 'Cormorant Garamond', serif)",
-            fontSize:      "clamp(2.4rem, 6vw, 5rem)",
-            fontWeight:    300,
-            letterSpacing: "0.08em",
+            fontFamily:    "var(--font-display)",
+            fontSize:      "clamp(3rem, 7.5vw, 6.5rem)",
+            fontWeight:    700,
+            letterSpacing: "0.02em",
             color:         "#fff",
-            margin:        "0 0 20px",
-            textShadow:    "0 2px 40px rgba(0,0,0,0.45)",
+            margin:        "0 0 24px",
+            lineHeight:    1.1,
+            textShadow:    "0 2px 40px rgba(0,0,0,0.5)",
           }}
         >
           {t("hero_1_title")}
         </h1>
         <p
           style={{
-            fontSize:      "clamp(0.95rem, 1.5vw, 1.2rem)",
+            fontFamily:    "var(--font-body)",
+            fontSize:      "clamp(1rem, 1.6vw, 1.25rem)",
             color:         "rgba(255,255,255,0.82)",
-            marginBottom:  44,
+            marginBottom:  48,
             fontWeight:    300,
-            letterSpacing: "0.05em",
+            letterSpacing: "0.06em",
             textShadow:    "0 1px 20px rgba(0,0,0,0.5)",
           }}
         >
@@ -277,9 +281,7 @@ function HomePage() {
         </Link>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          STATS STRIP
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ STATS STRIP ═══ */}
       <section style={liquidGlassSection}>
         <div className="container">
           <div className="stats-grid stagger-parent">
@@ -291,9 +293,9 @@ function HomePage() {
               <div key={label as string} className="stagger-child fade-up" style={{ color: "#fff", textAlign: "center" }}>
                 <div
                   style={{
-                    fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
-                    fontSize:   "clamp(2.4rem, 5vw, 3.8rem)",
-                    fontWeight: 300,
+                    fontFamily: "var(--font-display)",
+                    fontSize:   "clamp(2.8rem, 6vw, 4.5rem)",
+                    fontWeight: 700,
                     color:      "var(--color-gold, #c9a84c)",
                     lineHeight: 1,
                   }}
@@ -302,11 +304,13 @@ function HomePage() {
                 </div>
                 <div
                   style={{
-                    fontSize:      "0.72rem",
-                    letterSpacing: "0.2em",
+                    fontFamily:    "var(--font-body)",
+                    fontSize:      "0.68rem",
+                    letterSpacing: "0.28em",
                     textTransform: "uppercase",
                     color:         "rgba(255,255,255,0.65)",
-                    marginTop:     8,
+                    marginTop:     10,
+                    fontWeight:    500,
                   }}
                 >
                   {label}
@@ -317,9 +321,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          3D GALLERY
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ 3D GALLERY ═══ */}
       <section className="section gallery-3d" style={transparentSection}>
         <div className="container text-center">
           <span className="eyebrow fade-up" style={eyebrowStyle}>{t("the_space")}</span>
@@ -384,9 +386,7 @@ function HomePage() {
 
       <GoldDivider />
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          FACILITIES
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ FACILITIES ═══ */}
       <section className="section" style={transparentSection}>
         <div className="container">
           <div className="text-center" style={{ marginBottom: 64 }}>
@@ -407,9 +407,7 @@ function HomePage() {
 
       <GoldDivider />
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          REVIEWS — infinite marquee
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ REVIEWS ═══ */}
       <section className="section" style={{ ...transparentSection, overflow: "hidden" }}>
         <div className="container">
           <div className="text-center" style={{ marginBottom: 64 }}>
@@ -431,17 +429,17 @@ function HomePage() {
           >
             {[...REVIEWS, ...REVIEWS].map((r, index) => (
               <div key={`${r.key}-${index}`} style={{ ...liquidGlassReviewCard, flexShrink: 0 }}>
-                <div style={{ fontSize: "3.2rem", lineHeight: 1, color: "var(--color-gold, #c9a84c)", marginBottom: 6, fontFamily: "Georgia, serif", opacity: 0.65 }}>
+                <div style={{ fontSize: "3.2rem", lineHeight: 1, color: "var(--color-gold, #c9a84c)", marginBottom: 6, fontFamily: "var(--font-display)", opacity: 0.65 }}>
                   "
                 </div>
-                <p style={{ color: "rgba(255,255,255,0.88)", fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", marginBottom: 20, flexGrow: 1 }}>
+                <p style={{ fontFamily: "var(--font-body)", color: "rgba(255,255,255,0.88)", fontSize: "0.95rem", lineHeight: 1.8, fontStyle: "italic", marginBottom: 20, flexGrow: 1, fontWeight: 300 }}>
                   {t(r.key)}
                 </p>
                 <div style={{ display: "flex", gap: 3, marginBottom: 10, color: "var(--color-gold, #c9a84c)" }}>
                   {[...Array(5)].map((_, i) => <Star key={i} />)}
                 </div>
-                <div style={{ color: "#fff", fontWeight: 500, fontSize: "0.9rem", letterSpacing: "0.05em" }}>{r.name}</div>
-                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", marginTop: 2 }}>{r.country}</div>
+                <div style={{ fontFamily: "var(--font-body)", color: "#fff", fontWeight: 600, fontSize: "0.88rem", letterSpacing: "0.08em" }}>{r.name}</div>
+                <div style={{ fontFamily: "var(--font-body)", color: "rgba(255,255,255,0.45)", fontSize: "0.76rem", marginTop: 3, letterSpacing: "0.05em" }}>{r.country}</div>
               </div>
             ))}
           </div>
@@ -450,9 +448,7 @@ function HomePage() {
 
       <GoldDivider />
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          MAP
-          ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ MAP ═══ */}
       <section className="section" style={transparentSection}>
         <div className="container text-center" style={{ marginBottom: 48 }}>
           <span className="eyebrow fade-up" style={eyebrowStyle}>{t("find_us")}</span>
@@ -495,10 +491,10 @@ function HomePage() {
               key={label as string}
               style={{ ...liquidGlassCard, padding: "20px 32px", minWidth: 160, textAlign: "center" }}
             >
-              <div style={{ fontSize: "0.67rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--color-gold, #c9a84c)", marginBottom: 8 }}>
+              <div style={{ fontFamily: "var(--font-body)", fontSize: "0.65rem", letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--color-gold, #c9a84c)", marginBottom: 8, fontWeight: 600 }}>
                 {label}
               </div>
-              <p style={{ color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.92rem" }}>
+              <p style={{ fontFamily: "var(--font-body)", color: "rgba(255,255,255,0.85)", margin: 0, fontSize: "0.92rem", fontWeight: 300 }}>
                 {value}
               </p>
             </div>
@@ -575,36 +571,43 @@ const iconCircle: React.CSSProperties = {
 };
 
 const eyebrowStyle: React.CSSProperties = {
+  fontFamily:    "var(--font-body)",
   color:         "var(--color-gold, #c9a84c)",
-  letterSpacing: "0.22em",
-  fontSize:      "0.7rem",
+  letterSpacing: "0.30em",
+  fontSize:      "0.67rem",
   textTransform: "uppercase",
   display:       "block",
-  marginBottom:  12,
+  marginBottom:  14,
+  fontWeight:    600,
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontFamily:   "var(--font-display, 'Cormorant Garamond', serif)",
-  fontSize:     "clamp(2rem, 4vw, 3.2rem)",
-  fontWeight:   300,
+  fontFamily:   "var(--font-display)",
+  fontSize:     "clamp(2.4rem, 5vw, 4rem)",
+  fontWeight:   700,
   color:        "#fff",
   marginBottom: 64,
   textShadow:   "0 2px 20px rgba(0,0,0,0.3)",
+  lineHeight:   1.15,
+  letterSpacing: "0.01em",
 };
 
 const cardTitleStyle: React.CSSProperties = {
+  fontFamily:    "var(--font-body)",
   color:         "#fff",
   marginBottom:  6,
-  fontWeight:    400,
-  fontSize:      "0.88rem",
-  letterSpacing: "0.1em",
+  fontWeight:    600,
+  fontSize:      "0.82rem",
+  letterSpacing: "0.14em",
   textTransform: "uppercase",
 };
 
 const cardBodyStyle: React.CSSProperties = {
-  color:    "rgba(255,255,255,0.50)",
-  fontSize: "0.80rem",
-  margin:   0,
+  fontFamily: "var(--font-body)",
+  color:      "rgba(255,255,255,0.50)",
+  fontSize:   "0.80rem",
+  margin:     0,
+  fontWeight: 300,
 };
 
 // ─── Divider ─────────────────────────────────────────────────────────────────
